@@ -23,4 +23,4 @@ wall "	#Arquitecture: $arq
 	#Connections TCP : $tcp
 	#User log: $users
 	#Network: $ip $mac
-	#Sudo : $csudo cmd
+	#Sudo : $csudo cmd "
