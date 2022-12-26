@@ -1,0 +1,167 @@
+﻿1) 	Installation of Debian on Oracle VM Virtual Box:
+
+    • Download Debian 11: https://www.debian.org/download
+
+
+2)	Install and configuration sudo:
+
+su -
+apt install sudo
+usedmod -aG sudo fvalli-v (add fvalli-v to sudo group)
+getent group sudo (check if fvalli-v is on sudo group)
+group add user42
+usermod -aG user42 fvalli-v
+reboot
+mkdir /var/log/sudo
+sudo visudo
+
+add the lines below to the “sudo visudo”:
+Defaults	passwd_tries=3
+Defaults	badpass_message=”42 error: try again”
+Defaults	logfile=”/var/log/sudo/sudo.log”
+Defaults	requiretty
+Defaults	secure_path=”/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin”
+
+
+3)	Configuration of UFW
+
+sudo apt install ufw
+sudo ufw enable
+sudo ufw status
+sudo ufw allow 4242
+sudo ufw status
+
+4)	Configuration of SSH
+
+sudo apt install openssh-server
+sudo vi /etc/ssh/sshd_config
+
+add to the file above:
+Port 4242
+PermitRootLogin no
+
+sudo systemctl status ssh
+sudo service ssh status
+
+sudo reboot
+
+conenct to the server via ssh:
+
+ssh username@hostname -p 4242
+
+hostname is the ip address and can be found from the command “hostname -I”
+
+5)	Password policy
+
+sudo vi /etc/login.defs
+
+change password aging controls:
+PASS_MAX_DAYS	30
+PASS_MIN_DAYS	2
+PASS_WARN_AGE	7
+
+passwd command for changing password
+“passwd -e user” to force expire password
+
+
+Password strength:
+sudo apt install libpam-pwquality
+sudo vim /etc/pam.d/common-password
+
+edit the file with:
+pam_pwquality.so retry=3 minlen=10 ucredit=-1 dcredit=-1 lcredit=-1 maxrepeat=3 reject_username difok=7 enforce_for_root
+
+6)	Define static IP: this get rid of the port 68 open for DHCP
+
+sudo nano /etc/network/interfaces
+
+edit:
+auto enp0s3
+iface enp0s3 inet static
+address (ip from “hostname -I”)
+netmask 255.255.255.0
+gateway (ip from first line on “ip route”)
+
+7) 	Monitoring.sh
+
+look at the script
+
+8)	Crontab configuration: is a job scheduling utility
+
+sudo systemctl status cron.service
+sudo service cron status
+sudo crontab -e (has to be with sudo)
+
+edit with:
+*/10 * * * * bash monitoring.sh
+or
+0-60/10 * * * * bash monitoring.sh
+
+to stop the service just: sudo service cron stop
+
+commands:
+crontab -e (edit cron)
+crontab -l (list of the tasks for the current user)
+crontab – u username -e
+
+
+bonus) install LLMP (linux lighttpd mariaDB PHP) server
+
+sudo apt install lighttpd
+
+on “/etc/lighttpd/lighttpd.conf” says that port 80 is used, so:
+
+sudo ufw allow 80
+
+
+MARIADB:
+sudo apt install mariadb-server
+
+sudo mysql_secure_installation
+
+$ sudo mysql_secure_installation
+Enter current password for root (enter for none): #Just press Enter (do not confuse database root with system root)
+Switch to unix_socket authentication? No
+Change the root password? No 
+Remove anonymous users? [Y/n] Y
+Disallow root login remotely? [Y/n] Y
+Remove test database and access to it? [Y/n] Y
+Reload privilege tables now? [Y/n] Y
+
+sudo mariadb
+CREATE DATABASE <database-name>;
+GRANT ALL ON TestDatabase.* TO '<user>'@'localhost' IDENTIFIED BY '<password>' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+exit
+mariadb -u <user> -p → mariadb -u admin -p
+SHOW DATABASES;
+exit
+
+PHP:
+sudo apt install php-cgi php-mysql
+
+WORDPRESS:
+sudo apt install wget
+sudo wget http://wordpress.org/latest.tar.gz -P /var/www/html
+cd /var/www/html/
+sudo tar -xzvf /var/www/html/latest.tar.gz
+sudo rm /var/www/html/latest.tar.gz
+sudo cp -r /var/www/html/wordpress/* /var/www/html
+sudo rm -rf /var/www/html/wordpress
+sudo cp /var/www/html/wp-config-sample.php /var/www/html/wp-config.php
+
+
+configure Wordpress with MariaDB database with:
+sudo nano /var/www/html/wp-config.php
+
+replace:
+define( 'DB_NAME', 'database_name_here' );
+define( 'DB_USER', 'username_here' );
+define( 'DB_PASSWORD', 'password_here' );
+for the right user, password and database name
+
+
+Config lighttpd:
+sudo lighty-enable-mod fastcgi
+sudo lighty-enable-mod fastcgi-php
+sudo service lighttpd force-reload
