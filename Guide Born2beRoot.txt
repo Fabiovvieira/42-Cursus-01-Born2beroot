@@ -9,7 +9,7 @@ su -
 apt install sudo
 usedmod -aG sudo fvalli-v (add fvalli-v to sudo group)
 getent group sudo (check if fvalli-v is on sudo group)
-group add user42
+groupadd user42
 usermod -aG user42 fvalli-v
 reboot
 mkdir /var/log/sudo
@@ -50,6 +50,7 @@ conenct to the server via ssh:
 ssh username@hostname -p 4242
 
 hostname is the ip address and can be found from the command “hostname -I”
+(ip from hostname = 10.11.249.136)
 
 5)	Password policy
 
@@ -103,6 +104,14 @@ commands:
 crontab -e (edit cron)
 crontab -l (list of the tasks for the current user)
 crontab – u username -e
+
+sudo systemctl status cron.service
+sudo systemctl disable cron.service
+sudo systemctl stop cron.service
+sudo reboot
+
+sudo systemctl enable cron.service
+sudo systemctl start cron.service
 
 
 bonus) install LLMP (linux lighttpd mariaDB PHP) server
@@ -165,3 +174,49 @@ Config lighttpd:
 sudo lighty-enable-mod fastcgi
 sudo lighty-enable-mod fastcgi-php
 sudo service lighttpd force-reload
+
+Go to: http://ipaddress
+Set title: Born2beroot
+Username: fvalli-v
+Password: create
+Your email: fabiovv@hotmail.com
+
+
+
+bonus)	Installing and configuring FTP (https://www.geeksforgeeks.org/how-to-setup-and-configure-an-ftp-server-in-linux-2/)
+sudo apt install vsftpd
+sudo ufw allow 21
+sudo ufw status
+sudo mkdir /home/fvalli-v/ftp
+sudo chown fvalli-v /home/fvalli-v/ftp
+sudo nano /etc/vsftpd.conf
+
+edit:
+anonymous_enable=NO
+
+local_enable=YES
+
+write_enable=YES
+
+
+local_root=/home/$USER/ftp
+
+
+chroot_local_user=YES
+
+chroot_list_enable=YES
+
+chroot_list_file=/etc/vsftpd.chroot_list
+
+allow_writeable_chroot=YES
+
+local_umask=0002
+
+sudo touch /etc/vsftpd.chroot_list
+sudo nano /etc/vsftpd.chroot_list
+
+add "fvalli-v" on "/etc/vsftpd.chroot_list"
+
+connect by ftp:
+ftp <ipaddress>
+
